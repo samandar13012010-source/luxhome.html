@@ -169,3 +169,4 @@ renderStats();renderCatFilter();renderTable();
 </script>
 </body>
 </html>
+cp luxhome.html index.html && git add index.html && git commit -m "fix: add index.html" && git push
