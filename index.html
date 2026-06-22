@@ -179,6 +179,13 @@ async function api(m,p,b){
   var h={"Content-Type":"application/json","apikey":SK,"Authorization":"Bearer "+tok};
   if(m==="POST")h["Prefer"]="return=representation";
   var r=await fetch(SU+"/rest/v1/"+p,{method:m,headers:h,body:b?JSON.stringify(b):undefined});
+  
+  // Token eskirganda avtomatik logout
+  if(r.status===401){
+    doLogout();
+    return null;
+  }
+  
   if(m==="DELETE"||m==="PATCH")return;
   return r.json();
 }
