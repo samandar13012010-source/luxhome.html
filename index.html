@@ -48,6 +48,7 @@ input[type=month]:focus{box-shadow:0 0 0 3px rgba(252,91,21,.16);border-color:va
 .pg-row .ba{background:transparent;border:1px solid #2e2918;color:var(--muted);box-shadow:none}
 .pg-row .ba:hover{border-color:var(--gold);color:var(--gold)}
 .pg-row .ba.cur{border-color:var(--gold);color:var(--gold);background:rgba(252,91,21,.1)}
+.st.curF{border-color:var(--gold);background:linear-gradient(180deg,#2a1f12,#1e160d);box-shadow:0 0 0 1px rgba(252,91,21,.25) inset}
 button:disabled{opacity:.55;cursor:not-allowed;filter:none !important;transform:none !important}
 </style></head><body>
 <div class="lw" id="LW" style="display:none"><div class="lb">
@@ -154,21 +155,13 @@ button:disabled{opacity:.55;cursor:not-allowed;filter:none !important;transform:
     </div>
   </div>
 </div>
-<div id="gMov" onclick="if(event.target===this)cGM()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px">
-  <div style="background:var(--dark2);border-radius:14px;width:100%;max-width:900px;padding:20px;margin:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="color:var(--text);font-size:16px;margin:0">Barcha mahsulotlar</h3>
-      <button onclick="cGM()" style="background:var(--dark3);border:none;color:var(--muted);font-size:20px;cursor:pointer;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center">x</button>
-    </div>
-    <div id="gC" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px"></div>
-  </div>
-</div>
 <div id="toastBox"></div>
 <script>
 var SU="https://yaprjjishzefecbztdtn.supabase.co",SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhcHJqamlzaHplZmVjYnp0ZHRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MDgwMTMsImV4cCI6MjA5NTA4NDAxM30.f4-fsuVLhZXSLYVLjPSLqLYoGZecPrDPI2s84SlXf_g";
 var tok=localStorage.getItem("lh_tok")||"",prods=[],eId=null;
 var cart=[];
 try{cart=JSON.parse(localStorage.getItem("lh_cart")||"[]");}catch(e){cart=[];}
+var curFilter="all";
 function toast(msg,type,ms){
   type=type||"info"; ms=ms||3000;
   var box=document.getElementById("toastBox");
@@ -236,7 +229,11 @@ async function lP(){
   var d=await api("GET","products?select=*&order=created_at.desc");
   if(!d)return;
   prods=Array.isArray(d)?d:[];
-  rS(); rCF(); rT(); rSG(); lTS();
+  rS();
+  rCF();
+  var q=document.getElementById("sI").value;
+  if(q){rT();}else{filterStat(curFilter);}
+  rSG(); lTS();
   if(window.isViewer){
     document.querySelectorAll(".ba").forEach(function(b){b.style.display="none";});
     document.querySelectorAll(".ab").forEach(function(b){b.style.display="none";});
@@ -254,31 +251,31 @@ function rowHtml(p){
   return"<tr><td><div style='display:flex;align-items:center;gap:8px'>"+(p.image_url?"<img src='"+p.image_url+"' style='width:48px;height:48px;object-fit:cover;border-radius:8px;border:2px solid #FC5B15'>":"<div style='width:48px;height:48px;border-radius:8px;border:2px solid #2e2918;background:var(--dark3)'></div>")+"<strong>"+p.name+"</strong></div></td><td>"+p.qty+" dona</td><td>"+fmt(p.price)+"</td><td>"+st(p.qty)+"</td><td><button class='ab' onclick='oM("+p.id+")'>Tahrir</button><button class='ab dl' onclick='dP("+p.id+")'>Ochir</button></td></tr>";
 }
 function filterStat(t){
+  curFilter=t;
   document.getElementById("sI").value="";
   var rows=t==="low"?prods.filter(function(p){return p.qty>0&&p.qty<=5;}):t==="out"?prods.filter(function(p){return p.qty===0;}):prods;
   var tb=document.getElementById("tB");
+  rS();
   if(!rows.length){tb.innerHTML="<tr><td colspan='5' class='em'>Mahsulot topilmadi</td></tr>";return;}
   tb.innerHTML=rows.map(rowHtml).join("");
 }
-function oGM(){
-  var gm=document.getElementById("gMov"),gc=document.getElementById("gC");
-  if(!prods.length){gc.innerHTML="<div class='em'>Mahsulot yoq</div>";gm.style.display="flex";return;}
-  gc.innerHTML=prods.map(function(p){return"<div class='gc-item'>"+(p.image_url?"<img src='"+p.image_url+"' class='gc-img'>":"<div class='gc-noimg'><span>&#128247;</span></div>")+"<div class='gc-name'>"+p.name+"</div><div class='gc-price'>"+fmt(p.price)+"</div><div class='gc-qty'>"+st(p.qty)+"</div></div>";}).join("");
-  gm.style.display="flex";
-}
-function cGM(){document.getElementById("gMov").style.display="none";}
+
 function rS(){
   var t=prods.length,l=prods.filter(function(p){return p.qty>0&&p.qty<=5;}).length,o=prods.filter(function(p){return p.qty===0;}).length;
-  document.getElementById("sRow").innerHTML="<div class='st' onclick='filterStat(\"all\")' style='cursor:pointer'><div class='n'>"+t+"</div><div class='l'>Jami mahsulot</div></div><div class='st' onclick='filterStat(\"low\")' style='cursor:pointer'><div class='n'>"+l+"</div><div class='l'>Kam qolgan</div></div><div class='st' onclick='filterStat(\"out\")' style='cursor:pointer'><div class='n'>"+o+"</div><div class='l'>Tugagan</div></div>";
+  function cls(name){return curFilter===name?" curF":"";}
+  document.getElementById("sRow").innerHTML="<div class='st"+cls("all")+"' onclick='filterStat(\"all\")' style='cursor:pointer'><div class='n'>"+t+"</div><div class='l'>Jami mahsulot</div></div><div class='st"+cls("low")+"' onclick='filterStat(\"low\")' style='cursor:pointer'><div class='n'>"+l+"</div><div class='l'>Kam qolgan</div></div><div class='st"+cls("out")+"' onclick='filterStat(\"out\")' style='cursor:pointer'><div class='n'>"+o+"</div><div class='l'>Tugagan</div></div>";
 }
+
 function rCF(){}
 function rT(){
   var q=document.getElementById("sI").value.toLowerCase();
+  if(q&&curFilter!=="all"){curFilter="all";rS();}
   var rows=prods.filter(function(p){return !q||p.name.toLowerCase().includes(q);});
   var tb=document.getElementById("tB");
   if(!rows.length){tb.innerHTML="<tr><td colspan='5' class='em'>Mahsulot topilmadi</td></tr>";return;}
   tb.innerHTML=rows.map(rowHtml).join("");
 }
+
 function oM(id){
   eId=id||null;
   document.getElementById("mT").textContent=id?"Tahrirlash":"Yangi mahsulot";
