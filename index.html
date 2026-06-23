@@ -96,8 +96,7 @@ button:disabled{opacity:.55;cursor:not-allowed;filter:none !important;transform:
       <input type="text" id="sI" placeholder="Qidirish..." oninput="rT()">
       <button class="ba" onclick="oM()">+ Qoshish</button>
     </div>
-    <div class="tw" id="tw"><table><thead><tr><th>Nomi</th><th>Miqdor</th><th>Narx</th><th>Holat</th><th>Amallar</th></tr></thead><tbody id="tB"></tbody></table></div>
-    <div class="pg-grid" id="pG" style="display:none"></div>
+    <div class="tw"><table><thead><tr><th>Nomi</th><th>Miqdor</th><th>Narx</th><th>Holat</th><th>Amallar</th></tr></thead><tbody id="tB"></tbody></table></div>
   </div>
   <div id="sotuv" class="pg">
     <div class="sr">
@@ -167,6 +166,15 @@ button:disabled{opacity:.55;cursor:not-allowed;filter:none !important;transform:
     </div>
   </div>
 </div>
+<div class="ov" id="gridOv" style="display:none" onclick="if(event.target===this)closeGrid()">
+  <div class="md" style="max-width:760px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+      <h3 style="margin:0">Barcha mahsulotlar</h3>
+      <button class="blo" onclick="closeGrid()">Yopish</button>
+    </div>
+    <div class="pg-grid" id="gridGC"></div>
+  </div>
+</div>
 <div id="toastBox"></div>
 <script>
 var SU="https://yaprjjishzefecbztdtn.supabase.co",SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhcHJqamlzaHplZmVjYnp0ZHRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MDgwMTMsImV4cCI6MjA5NTA4NDAxM30.f4-fsuVLhZXSLYVLjPSLqLYoGZecPrDPI2s84SlXf_g";
@@ -174,7 +182,6 @@ var tok=localStorage.getItem("lh_tok")||"",prods=[],eId=null;
 var cart=[];
 try{cart=JSON.parse(localStorage.getItem("lh_cart")||"[]");}catch(e){cart=[];}
 var curFilter="all";
-var gridMode=false;
 function toast(msg,type,ms){
   type=type||"info"; ms=ms||3000;
   var box=document.getElementById("toastBox");
@@ -245,7 +252,7 @@ async function lP(){
   rS();
   rCF();
   var q=document.getElementById("sI").value;
-  if(q){rT();}else{renderProducts();}
+  if(q){rT();}else{renderTable(tableRows());}
   rSG(); lTS();
   if(window.isViewer){
     document.querySelectorAll(".ba").forEach(function(b){b.style.display="none";});
@@ -271,29 +278,23 @@ function renderTable(rows){
   if(!rows.length){tb.innerHTML="<tr><td colspan='5' class='em'>Mahsulot topilmadi</td></tr>";return;}
   tb.innerHTML=rows.map(rowHtml).join("");
 }
-function renderGrid(rows){
-  var pg=document.getElementById("pG");
-  if(!rows.length){pg.innerHTML="<div class='em' style='grid-column:1/-1'>Mahsulot topilmadi</div>";return;}
-  pg.innerHTML=rows.map(cardHtml).join("");
+function tableRows(){
+  return curFilter==="low"?prods.filter(function(p){return p.qty>0&&p.qty<=5;}):curFilter==="out"?prods.filter(function(p){return p.qty===0;}):prods;
 }
-function renderProducts(){
-  var rows=curFilter==="low"?prods.filter(function(p){return p.qty>0&&p.qty<=5;}):curFilter==="out"?prods.filter(function(p){return p.qty===0;}):prods;
-  if(gridMode){
-    document.getElementById("tw").style.display="none";
-    document.getElementById("pG").style.display="grid";
-    renderGrid(rows);
-  }else{
-    document.getElementById("pG").style.display="none";
-    document.getElementById("tw").style.display="block";
-    renderTable(rows);
-  }
+function openGrid(){
+  var pg=document.getElementById("gridGC");
+  if(!prods.length){pg.innerHTML="<div class='em' style='grid-column:1/-1'>Mahsulot yo'q</div>";}
+  else{pg.innerHTML=prods.map(cardHtml).join("");}
+  document.getElementById("gridOv").style.display="flex";
 }
+function closeGrid(){document.getElementById("gridOv").style.display="none";}
+
 function filterStat(t){
   curFilter=t;
-  gridMode=(t==="all");
   document.getElementById("sI").value="";
   rS();
-  renderProducts();
+  renderTable(tableRows());
+  if(t==="all")openGrid();
 }
 
 function rS(){
@@ -305,15 +306,14 @@ function rS(){
 function rCF(){}
 function rT(){
   var q=document.getElementById("sI").value.toLowerCase();
-  if(!q){renderProducts();return;}
-  if(curFilter!=="all"||gridMode){curFilter="all";gridMode=false;rS();}
-  document.getElementById("pG").style.display="none";
-  document.getElementById("tw").style.display="block";
+  if(!q){renderTable(tableRows());return;}
+  if(curFilter!=="all"){curFilter="all";rS();}
   var rows=prods.filter(function(p){return p.name.toLowerCase().includes(q);});
   renderTable(rows);
 }
 
 function oM(id){
+  document.getElementById("gridOv").style.display="none";
   eId=id||null;
   document.getElementById("mT").textContent=id?"Tahrirlash":"Yangi mahsulot";
   document.getElementById("imgPreview").innerHTML="";
@@ -365,6 +365,7 @@ async function sP(){
   toast(eId?"Mahsulot tahrirlandi ✓":"Mahsulot qo'shildi ✓","ok");
 }
 function dP(id){
+  document.getElementById("gridOv").style.display="none";
   var ov=document.getElementById("delOv");
   ov.style.display="flex";
   document.getElementById("delConfBtn").onclick=async function(){
@@ -500,7 +501,7 @@ async function lAn(){
   _chart=new Chart(ctx,{type:"bar",data:{labels:labels,datasets:[{label:"Som",data:data,backgroundColor:"rgba(252,91,21,0.6)",borderColor:"#FC5B15",borderWidth:1}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#9A8E75",font:{size:10}},grid:{color:"#2e2918"}},y:{ticks:{color:"#9A8E75",font:{size:10}},grid:{color:"#2e2918"}}}}});
 }
 document.addEventListener("keydown",function(e){
-  if(e.key==="Escape"){cM();cCh();document.getElementById("delOv").style.display="none";}
+  if(e.key==="Escape"){cM();cCh();closeGrid();document.getElementById("delOv").style.display="none";}
   if(e.key==="Enter"&&document.getElementById("LW").style.display!=="none")doLogin();
 });
 function sp(id,btn){
