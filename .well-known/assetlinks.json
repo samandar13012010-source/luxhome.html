@@ -1,1 +1,8 @@
-
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.homestauz.twa",
+        "sha256_cert_fingerprints": ["ED:72:1F:88:83:2A:96:1F:E2:5C:92:43:26:B0:FB:34:77:50:70:85:39:C5:0B:1B:F5:44:FC:AD:A7:F5:79:6F"]
+      }
+    }]
