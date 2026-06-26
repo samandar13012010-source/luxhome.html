@@ -1,0 +1,13 @@
+# Telethon sessiya fayli — akkaunt kirishini beradi, HECH QACHON commit qilinmaydi
+*.session
+*.session-journal
+
+# Shaxsiy API kalitlari
+tg_config.json
+
+# Lokal kesh
+channel_catalog.json
+
+# Python
+__pycache__/
+*.pyc
